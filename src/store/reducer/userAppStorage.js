@@ -1,11 +1,11 @@
 import {
-    LOG_ADMIN_IN, LOGIN_ADMIN, UPDATE_ADMIN, FETCH_COSSIGNMENTS, UPDATE_COSSIGNMENT, DELETE_COSSIGNMENT, CREATE_COSSIGNMENT, FETCH_HISTORIES, UPDATE_HISTORY, DELETE_HISTORY, CREATE_HISTORY
+    REFRESH_LOGIN, LOGIN, UPDATE_ADMIN, FETCH_COSSIGNMENTS, UPDATE_COSSIGNMENT, DELETE_COSSIGNMENT, CREATE_COSSIGNMENT, FETCH_HISTORIES, UPDATE_HISTORY, DELETE_HISTORY, CREATE_HISTORY
 } from "../action/userAppStorage";
 
 
 
 const initialState = {
-    adminToken: "",
+    token: "",
     //expiresIn: "",
     admin: null,
     color: {
@@ -24,18 +24,18 @@ const initialState = {
 
 export const userAuthReducer = (state = initialState, action) => {
     switch (action.type) {
-        case LOG_ADMIN_IN:
+        case REFRESH_LOGIN:
             return {
                 ...state,
                 admin: action.payload.admin,
-                adminToken: action.payload.token
+                token: action.payload.token
             }
 
-        case LOGIN_ADMIN:
+        case LOGIN:
             return {
                 ...state,
                 admin: action.payload.admin,
-                adminToken: action.payload.token
+                token: action.payload.token
             }
 
 

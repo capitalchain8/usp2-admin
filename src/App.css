@@ -7,9 +7,7 @@
     --color-fade: rgb(245, 245, 245);
     --color-light-fade: rgb(250, 250, 250);
     --color-background: #fff;
-    --color-blue:  #382b7d;
-    --color-blue: #382b7d;
-    --background-color:#fff;
+    --color-blue: rgb(41, 46, 61);
     --fadeText:rgb(100,100,100);
     --headColor:rgb(50,50,50);
     --color-black:black;
@@ -99,10 +97,6 @@ body {
 /*styling the drawer section*/
 .drawerCon {
     display: none;
-    padding-right:25px;
-    padding-left:25px;
-    background-color: rgb(240,240,240);
-    width:100vw;
     height: 100vh;
     overflow-y: scroll;
 }
@@ -135,7 +129,6 @@ body {
         position:absolute;
         z-index: 150;
         width:0vh;
-        background-color: var(--color-background);
         overflow-y: scroll;
         
     }

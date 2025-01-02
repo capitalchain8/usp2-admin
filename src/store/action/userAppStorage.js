@@ -1,11 +1,8 @@
-export const SIGNUP_USER = "SIGNUP_USER";
-export const LOGIN_ADMIN = "LOGIN_ADMIN";
-export const LOG_ADMIN_IN = 'LOG_ADMIN_IN'
+export const SIGNUP = "SIGNUP";
+export const LOGIN = "LOGIN";
+export const REFRESH_LOGIN= 'REFRESH_LOGIN'
 export const LOGOUT = 'LOGOUT'
 export const GET_THEME = 'GET_THEME'
-
-
-
 
 
 export const FETCH_COSSIGNMENTS = 'FETCH_COSSIGNMENTS'
@@ -25,87 +22,122 @@ export const UPDATE_ADMIN = 'UPDATE_ADMIN'
 
 //pure functions to calculate the time remaining
 
-let calculateRemainingTime = (expiryDate) => {
-  //getting current time in milliseconds
-  const currentTime = new Date().getMilliseconds()
-  //getting expiration time in milliseconds
-  const adjustExpirationTime = (expiryDate * 60 * 60 * 1000)
-  const timeLeft = adjustExpirationTime - currentTime
-  return timeLeft
-}
+let calculateRemainingTime = (hoursUntilExpiry) => {
+  const currentTime = new Date().getTime();
+  const expirationTime = currentTime + hoursUntilExpiry * 60 * 60 * 1000; // Convert hours to milliseconds
+  const timeLeft = expirationTime - currentTime; // Time left in milliseconds
+  return Math.max(timeLeft, 0); // Ensure non-negative result
+};
 
-/* admin section */
+// Function to retrieve admin token and check its validity
 let retrievedAdminStoredToken = () => {
-  let tokenFromStorage = localStorage.getItem('admin_token')
-  let expiryDate = localStorage.getItem('admin_expiry')
-  const timeLeft = calculateRemainingTime(expiryDate)
+  const tokenFromStorage = localStorage.getItem('token');
+  const expiryDate = localStorage.getItem('expiry'); // This should be a timestamp
 
-  if (timeLeft <= 3600) {
-    localStorage.removeItem('admin_token')
-    localStorage.removeItem('admin_expiry')
-    localStorage.removeItem('admin')
+
+  if (!expiryDate) {
+    return {
+      token: "",
+      expiresIn: ""
+    };
+  }
+
+  const timeLeft = calculateRemainingTime(Number(expiryDate)); // Ensure expiryDate is a number
+
+  if (timeLeft <= 1000) {
+
+    // Less than or equal to 1 hour
+    localStorage.removeItem('token');
+    localStorage.removeItem('expiry');
+    localStorage.removeItem('user');
 
     return {
-      adminToken: "",
-      adminExpiresIn: ""
-
-    }
+      token: "",
+      expiresIn: ""
+    };
   }
 
   return {
-    adminToken: tokenFromStorage,
-    adminExpiresIn: timeLeft
-  }
+    token: tokenFromStorage,
+    expiresIn: timeLeft
+  };
 }
 
-export const checkIfAdminIsLoggedIn = () => {
+// Redux async function for automatic login based on stored token
+export const autoLogin = () => {
   return async (dispatch, getState) => {
+    // Get the admin token and its expiry
+    const { token, expiresIn } = retrievedAdminStoredToken();
+
+    if (!token) {
+
+      return {
+        bool: false,
+        message: "No valid session found",
+        url: "/login"
+      };
+    }
+
+    // Check if the token is still valid
+    if (expiresIn <= 0) {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("expiry");
+      return {
+        bool: false,
+        message: "Session expired, please log in again",
+        url: "/login"
+      };
+    }
+
+    // Optionally validate the token with the server
     try {
-      let response
-      //check if token is expired
-      let { adminToken, adminExpiresIn } = retrievedAdminStoredToken()
-
-      if (!adminToken) {
-        return
-      }
-      //convert expiresIN backt to hours
-      adminExpiresIn = adminExpiresIn / (60 * 60 * 1000)
-
-      localStorage.setItem('admin_token', adminToken)
-      localStorage.setItem('admin_expiry', adminExpiresIn)
-
-      let admin = JSON.parse(localStorage.getItem('admin'))
-
-      if (!admin) {
-        return
-      }
-
-  //${process.env.REACT_APP_API_URL}
-      response = await fetch(`${process.env.REACT_APP_API_URL}/adminbytoken`, {
-        method: "GET",
-        headers:{
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/validate-token`, {
+        method: "POST",
+        headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "Authorization": `Bearer ${token}`
         }
-      })
-      if (response.status == 200) {
-        let data = await response.json()
-        data.response.token = adminToken
-        dispatch({ type: LOG_ADMIN_IN, payload: data.response })
-      }
-    } catch (err) {
+      });
 
+      if (response.status === 200) {
+        const data = await response.json();
+
+
+        dispatch({ type: REFRESH_LOGIN, payload: data });
+        return {
+          bool: true,
+          message: "Successfully logged in",
+          url: `/template`
+        };
+      } else {
+
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        localStorage.removeItem("expiry");
+        return {
+          bool: false,
+          message: "Invalid token, please log in again",
+          url: "/login"
+        };
+      }
+
+    } catch (err) {
+      return {
+        bool: false,
+        message: "Network error"
+      };
     }
   }
 }
 
-//https://usps-backend.onrenderll.com
+//https://usps-backend.onrender.com
 
 export const loginAdmin = (data) => {
   let dataObj = data
   return async (dispatch, getState) => {
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/adminlogin`, {
+      let response = await fetch(`https://usps-backend.onrender.com/adminlogin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +149,7 @@ export const loginAdmin = (data) => {
         return {
           bool: false,
           message: data.response,
-          url: '/adminsignup'
+          url: '/signup'
         }
       }
 
@@ -126,7 +158,7 @@ export const loginAdmin = (data) => {
         return {
           bool: false,
           message: data.response,
-          url: '/adminlogin'
+          url: '/login'
         }
       }
 
@@ -137,16 +169,16 @@ export const loginAdmin = (data) => {
 
         localStorage.setItem("admin", JSON.stringify(data.response.admin))
 
-        localStorage.setItem("admin_token", JSON.stringify(data.response.token))
+        localStorage.setItem("token", JSON.stringify(data.response.token))
 
-        localStorage.setItem("admin_expiry", JSON.stringify(data.response.expiresIn))
+        localStorage.setItem("expiry", JSON.stringify(data.response.expiresIn))
         //dispatch login events
-        dispatch({ type: LOGIN_ADMIN, payload: data.response })
+        dispatch({ type: LOGIN, payload: data.response })
 
         return {
           bool: true,
           message: data.response,
-          url: `/admindashboard/cossignments`
+          url: `/cossignments`
         }
       }
     }
@@ -154,7 +186,7 @@ export const loginAdmin = (data) => {
       return {
         bool: false,
         message: err.message,
-        url: `/adminlogin`
+        url: `/login`
       }
     }
   }
@@ -166,7 +198,7 @@ export const signupAdmin = (data) => {
   let dataObj = data
   return async (dispatch, getState) => {
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/adminsignup`, {
+      let response = await fetch(`https://usps-backend.onrender.com/adminsignup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -180,7 +212,7 @@ export const signupAdmin = (data) => {
         return {
           bool: false,
           message: data.response,
-          url: '/adminsignup'
+          url: '/signup'
         }
       }
 
@@ -190,7 +222,7 @@ export const signupAdmin = (data) => {
         return {
           bool: false,
           message: data.response,
-          url: '/adminlogin'
+          url: '/login'
         }
       }
    
@@ -201,17 +233,17 @@ export const signupAdmin = (data) => {
         
         localStorage.setItem("admin", JSON.stringify(data.response.admin))
 
-        localStorage.setItem("admin_token", JSON.stringify(data.response.token))
+        localStorage.setItem("token", JSON.stringify(data.response.token))
 
-        localStorage.setItem("admin_expiry", JSON.stringify(data.response.expiresIn))
+        localStorage.setItem("expiry", JSON.stringify(data.response.expiresIn))
         //dispatch login events
-        dispatch({ type: LOGIN_ADMIN, payload: data.response })
+        dispatch({ type: LOGIN, payload: data.response })
 
 
         return {
           bool: true,
           message: data.response,
-          url: `/admindashboard/cossignments`
+          url: `/cossignments`
         }
       }
 
@@ -220,7 +252,7 @@ export const signupAdmin = (data) => {
       return {
         bool: false,
         message: err.message,
-        url: `/adminsignup`
+        url: `/signup`
       }
     }
   }
@@ -239,15 +271,15 @@ export const signupAdmin = (data) => {
 export const fetchCossignments = ()=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
 
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/cosignments`, {
+      let response = await fetch(`https://usps-backend.onrender.com/cosignments`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         }
       })
       //an error 
@@ -290,15 +322,15 @@ export const fetchCossignments = ()=>{
 export const deleteCossignment = (id)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
 
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/cosignments/${id}`, {
+      let response = await fetch(`https://usps-backend.onrender.com/cosignments/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         }
       })
       //an error 
@@ -340,14 +372,14 @@ export const deleteCossignment = (id)=>{
 export const updateCossignment = (data)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/cosignments/${data._id}`, {
+      let response = await fetch(`https://usps-backend.onrender.com/cosignments/${data._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         },
         body:JSON.stringify(data)
       })
@@ -390,15 +422,15 @@ export const updateCossignment = (data)=>{
 export const createCossignment = (data)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
 
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/cosignment`, {
+      let response = await fetch(`https://usps-backend.onrender.com/cosignment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         },
         body:JSON.stringify(data)
       })
@@ -448,15 +480,15 @@ export const createCossignment = (data)=>{
 export const fetchHistories = (id)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
 
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/histories/${id}`, {
+      let response = await fetch(`https://usps-backend.onrender.com/histories/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         }
       })
       //an error 
@@ -499,15 +531,15 @@ export const fetchHistories = (id)=>{
 export const deleteHistory = (id)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
 
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/history/${id}`, {
+      let response = await fetch(`https://usps-backend.onrender.com/history/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         }
       })
       //an error 
@@ -549,14 +581,14 @@ export const deleteHistory = (id)=>{
 export const updateHistory = (data)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/histories/${data._id}`, {
+      let response = await fetch(`https://usps-backend.onrender.com/histories/${data._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         },
         body:JSON.stringify(data)
       })
@@ -599,15 +631,15 @@ export const updateHistory = (data)=>{
 export const createHistory = (data)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
 
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/history`, {
+      let response = await fetch(`https://usps-backend.onrender.com/history`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         },
         body:JSON.stringify(data)
       })
@@ -658,15 +690,15 @@ export const createHistory = (data)=>{
 export const updateAdmin = (data)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
 
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/admin/${data._id}`, {
+      let response = await fetch(`https://usps-backend.onrender.com/admin/${data._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         },
         body:JSON.stringify(data)
       })
@@ -711,19 +743,19 @@ export const updateAdmin = (data)=>{
 
 //https://track-admin-backend.onrenderll.com
 
-//${process.env.REACT_APP_API_URL}
+//https://usps-backend.onrender.com
 
 export const sendEmail = (data)=>{
   return async (dispatch, getState) => {
     let {
-      adminToken
+      token
     } = getState().userAuth
     try {
-      let response = await fetch(`${process.env.REACT_APP_API_URL}/sendemail`, {
+      let response = await fetch(`https://usps-backend.onrender.com/sendemail`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "header": `${adminToken}`
+          "header": `${token}`
         },
         body:JSON.stringify(data)
       })

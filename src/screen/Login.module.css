@@ -4,6 +4,7 @@
     height: 100vh
 }
 
+
 .screenContainer .leftContainer {
     width: 45%;
     height: 100%;
@@ -14,20 +15,7 @@
     z-index: 400;
 }
 
-.screenContainer .leftContainer::before {
 
-    position: absolute;
-    content: '';
-    display: block;
-    width: 100%;
-    height: 100%;
-    z-index: 700;
-    background-image: url('../../public/ominix_signup.png') no-repeat;
-    position: relative;
-
-
-
-}
 
 .screenContainer h1 {
     font-size: 2.5rem;
@@ -128,7 +116,13 @@
 
 }
 
-
+.button{
+    padding:15px 5px;
+    background-color: var(--color-blue);
+    width:100%;
+    color:var(--color-white);
+    font-size: 1rem;
+}
 
 
 
@@ -136,17 +130,11 @@
 @media screen and (max-width:1000px) {
     .screenContainer .rightContainer .rightformcontainer {
         width: 70%;
-
-
     }
-
-
-
 }
 
 @media screen and (max-width:850px) {
     .screenContainer .rightContainer .rightformcontainer {}
-
     .screenContainer h1 {
         font-size: 2rem;
     }
@@ -183,20 +171,14 @@
 
     .screenContainer .rightContainer .rightformcontainer {
         padding-top: 20px;
-
-
     }
 
     .screenContainer .rightContainer .rightformcontainer {
         padding-top: 20px;
-
-
     }
 
     .screenContainer .rightContainer .rightformcontainer .navigate {
         display: block;
-
-
     }
 
 
@@ -208,7 +190,6 @@
 @media screen and (max-width: 291px) {
     .screenContainer .rightContainer .rightformcontainer h2 {
         font-size: 1.5rem;
-
     }
 
 

@@ -2,39 +2,39 @@ import React, { useEffect, Suspense } from "react"
 import { Route, Routes } from 'react-router-dom'
 import './App.css'
 //importing redux action to log user in initially
-import { checkIfAdminIsLoggedIn } from "./store/action/userAppStorage";
+import { autoLogin } from "./store/action/userAppStorage";
 import { useDispatch } from "react-redux";
-import FallBackComponent from './component/general/Fallback'
+import FallBackComponent from './component/Fallback'
 import { useSelector } from "react-redux";
 
 
 {/*Admin dashbaoard section*/ }
-const AdminLogin = React.lazy(() => import('./screen/admin_screen/Auth/Login'))
+const AdminLogin = React.lazy(() => import('./screen/Login'))
 
-const AdminSignup = React.lazy(() => import('./screen/admin_screen/Auth/Signup'))
-
-
+const AdminSignup = React.lazy(() => import('./screen/Signup'))
 
 
-const AdminCossignments = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminCossignments'))
-const AdminEditCosignment = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminEditCosignment'))
-const AdminCreateCossignment = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminCreateCossignment'))
 
 
-const AdminHistories = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminHistories'))
-const AdminEditHistory = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminEditHistory'))
-const AdminCreateHistories = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminCreateHistories'))
+const AdminCossignments = React.lazy(() => import('./screen/AdminCossignments'))
+const AdminEditCosignment = React.lazy(() => import('./screen/AdminEditCosignment'))
+const AdminCreateCossignment = React.lazy(() => import('./screen/AdminCreateCossignment'))
 
-const AdminEditAdmin = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminEditAdmin'))
 
-const AdminEmail = React.lazy(() => import('./screen/admin_screen/Dashboard/AdminEmail'))
+const AdminHistories = React.lazy(() => import('./screen/AdminHistories'))
+const AdminEditHistory = React.lazy(() => import('./screen/AdminEditHistory'))
+const AdminCreateHistories = React.lazy(() => import('./screen/AdminCreateHistories'))
+
+const AdminEditAdmin = React.lazy(() => import('./screen/AdminEditAdmin'))
+
+const AdminEmail = React.lazy(() => import('./screen/AdminEmail'))
 
 function App() {
   let dispatch = useDispatch()
-  let { adminToken } = useSelector(state => state.userAuth)
+  let { token } = useSelector(state => state.userAuth)
 
   useEffect(async () => {
-    await dispatch(checkIfAdminIsLoggedIn())
+    await dispatch(autoLogin())
     //await dispatch(getTheme())
   }, [])
 
@@ -46,22 +46,22 @@ function App() {
           {/*the general routes */}
           <Route path='/' element={<AdminLogin />} />
 
-          <Route path='/adminlogin' element={<AdminLogin />} />
+          <Route path='/login' element={<AdminLogin />} />
           {/* the Admin  DASHBOARD routes*/}
+          
 
-          <Route path='/adminsignup' element={<AdminSignup />} />
-
+          <Route path='/signup' element={<AdminSignup />} />
           {/* history routes */}
-          <Route path='/admindashboard/histories/:cossignment' element={adminToken ? <AdminHistories status={false} /> : <AdminLogin />} />
-          <Route path='/admindashboard/histories/:cossignment/:id' element={adminToken ? <AdminEditHistory status={true} /> : <AdminLogin />} />
-          <Route path='/admindashboard/history/:cossignment' element={adminToken ? <AdminCreateHistories status={true} /> : <AdminLogin />} />
+          <Route path='/histories/:cossignment' element={token ? <AdminHistories status={false} /> : <AdminLogin />} />
+          <Route path='/histories/:cossignment/:id' element={token ? <AdminEditHistory status={true} /> : <AdminLogin />} />
+          <Route path='/history/:cossignment' element={token ? <AdminCreateHistories status={true} /> : <AdminLogin />} />
 
           {/* cossignment routes routes */}
-          <Route path='/admindashboard/cossignments' element={adminToken ? <AdminCossignments status={false} /> : <AdminLogin />} />
-          <Route path='/admindashboard/cossignments/:id' element={adminToken ? <AdminEditCosignment status={true} /> : <AdminLogin />} />
-          <Route path='/admindashboard/cossignment' element={adminToken ? <AdminCreateCossignment status={true} /> : <AdminLogin />} />
-          <Route path='/admindashboard/admin' element={adminToken ? <AdminEditAdmin status={true} /> : <AdminLogin />} />
-          <Route path='/admindashboard/email' element={adminToken ? <AdminEmail status={true} /> : <AdminLogin />} />
+          <Route path='/cossignments' element={token ? <AdminCossignments status={false} /> : <AdminLogin />} />
+          <Route path='/cossignments/:id' element={token ? <AdminEditCosignment status={true} /> : <AdminLogin />} />
+          <Route path='/cossignment' element={token ? <AdminCreateCossignment status={true} /> : <AdminLogin />} />
+          <Route path='/admin' element={token ? <AdminEditAdmin status={true} /> : <AdminLogin />} />
+          <Route path='/email' element={token ? <AdminEmail status={true} /> : <AdminLogin />} />
         </Routes>
       </Suspense>
     </div>
