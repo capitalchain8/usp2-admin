@@ -5,7 +5,7 @@
     justify-content: center;
     overflow-y: scroll;
     border-bottom: none;
-    height: 80vh;
+    height: 100%;
     overflow-x: scroll;
     width: 100%;
     background-color: rgb(47, 50, 74);
