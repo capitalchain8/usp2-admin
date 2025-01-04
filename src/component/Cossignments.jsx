@@ -158,11 +158,11 @@ export const AdminCossignmentsComponent = ({ status }) => {
                             </td>
 
                             <td onClick={() => deleteHandler(data._id)} className={styles.click}>
-                                <span className='material-icons'> delete</span> delete
+                                 delete
                             </td>
 
                             <td onClick={() => editHandler(data._id)} className={styles.click}>
-                                <span className='material-icons'> edit</span>edit
+                                edit
                             </td>
 
 

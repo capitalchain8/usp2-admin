@@ -7,7 +7,8 @@
     border-bottom: none;
     height: 80vh;
     overflow-x: scroll;
-    width: 100%
+    width: 100%;
+    background-color: rgb(47, 50, 74);
 }
 .payScreen .pay {
     width: 100vw;
