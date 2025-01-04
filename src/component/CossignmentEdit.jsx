@@ -215,40 +215,13 @@ export const AdminCossignmentEditComponent = ({ updateHandler,onLoader }) => {
 
                     </div>
 
-                    <div className={styles.tableCon}>
-                        <table>
-                            <tr>
-                                <th>Qty</th>
-                                <th>Piece Type</th>
-                                <th>Description </th>
-                                <th>Length(cm)</th>
-                                <th>Weight(kg)</th>
-                                <th>Width(cm)</th>
-                                <th>Height(cm)</th>
-                            </tr>
-                            <tr>
-                                <td>{isData.Qty}</td>
-                                <td>{isData.piece_type}</td>
-                                <td>{isData.description}</td>
-                                <td>{isData.length}</td>
-                                <td>{isData.weight}</td>
-                                <td>{isData.width}</td>
-                                <td>{isData.height}</td>
-
-                            </tr>
-
-                        </table>
-
-
-                    </div>
+                 
 
 
 
                 </div>}
 
-                <button style={{ width: '100%', marginBottom: '30px' }} onClick={handlePrint}>
-                    print
-                </button>
+               
 
                 {cossignmentsList && isData && <form className={styles.editForm} onSubmit={submitHandler}>
 
